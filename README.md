@@ -3,8 +3,8 @@ Clucumber, the CL Cucumber adapter
 
 This is a (somewhat complete) implementation of the [cucumber wire
 protocol](http://wiki.github.com/aslakhellesoy/cucumber/wire-protocol) in (as portable as possible) Common Lisp. This means you can
-write [cucumber](http://cukes.info/) feature definitions, and write lisp code to execute
-your scenarios.
+write [cucumber](http://cukes.info/) features, and write lisp code to execute
+your steps.
 
 Getting started
 ---------------
