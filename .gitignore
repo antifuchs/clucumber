@@ -1,0 +1,2 @@
+*.fasl
+features/step_definitions/*.wire

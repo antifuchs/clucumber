@@ -7,8 +7,8 @@ Feature: Packages
 Scenario: Defining a package in support
   
   When I start clucumber in fixtures/packages/
-  Then the current package should be default-package
+  Then the current package should be "default-package"
 
   When I define some-other-package as the test package
-  Then the current package should be some-other-package
+  Then the current package should be "some-other-package"
 

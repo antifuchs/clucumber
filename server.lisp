@@ -1,5 +1,7 @@
 (cl:in-package #:clucumber)
 
+(defvar *base-pathname*)
+
 (defun load-definitions (base-pathname)
   (let ((support-files (directory (merge-pathnames (make-pathname :directory '(:relative "support"
                                                                                :wild-inferiors)
@@ -19,68 +21,65 @@
                            :key (lambda (path)
                                   (enough-namestring path base-pathname))))))))
 
-(defun serve-cucumber-requests (socket)
-  (let ((stream (usocket:socket-stream socket)))
-   (unwind-protect
-       (loop with eof-value = (gensym)
-             for line = (read-line stream nil eof-value)
-             until (eql line eof-value)
-             do (catch 'exited
-                  (let ((did-not-unwind nil)
-                        (*debugger-hook* (lambda (condition prev-hook)
-                                           (declare (ignore prev-hook))
-                                           (print :debugger stream)
-                                           (prin1 (trivial-backtrace:print-backtrace condition
-                                                                                     :output nil))
-                                           (throw 'exited nil))))
-                    (unwind-protect 
-                        (progn
-                          (call-step line)
-                          (print :ok stream)
-                          (setf did-not-unwind t))
-                      (unless did-not-unwind
-                        (print :unwind stream)
-                        (terpri stream)))))))))
+(defun serve-cucumber-requests (socket &aux (stream (socket-stream socket)))
+  (handler-case
+      (loop
+        (let* ((line (read-line stream))
+               (message (read-json line nil))
+               (reply (call-wire-protocol-method message)))
+          (format t "Got this: ~S~%" message)
+          (format t "Wire-protocol method returns ~S~%" reply)
+          (st-json:write-json reply stream)
+          (terpri stream)
+          (finish-output stream)))
+    (end-of-file nil nil)))
+
 
 ;;; Step definitions
 
 
-(defparameter *steps* ())
+(defparameter *steps* (make-array 0 :adjustable t :fill-pointer t))
 
-(defun call-step (line)
-  (let ((matches (remove-if-not (lambda (regexp)
-                                  (cl-ppcre:scan regexp line))
-                                *steps* :key #'car)))
-    (unless (= 1 (length matches))
-      (error "Ambiguous step definitions matching ~S: ~S" line matches))
-    (let ((regex (car (first matches)))
-          (function (cdr (first matches))))
-      (apply function (coerce (nth-value 1 (cl-ppcre:scan-to-strings regex line)) 'list)))))
+(defclass step-definition ()
+     ((regex :initarg :regex :accessor regex)
+      (cont :initarg :continuation :accessor continuation)
+      (scanner :accessor scanner)
+      (definition-file :initform *load-truename* :accessor definition-file)))
+
+(defmethod initialize-instance :after ((o step-definition) &key regex &allow-other-keys)
+  (setf (scanner o) (cl-ppcre:create-scanner regex)))
 
 (defun add-step (regex function)
-  (let ((existing-step (find regex *steps* :key #'car :test #'string=)))
+  (let ((existing-step (find regex *steps* :key #'regex :test #'string=)))
     (if existing-step
-        (setf (cdr existing-step) function)
-        (setf *steps* (nconc *steps*
-                             (list (cons regex function))))))
+        (setf (continuation existing-step) function
+              (definition-file existing-step) *load-truename*)
+        (vector-push-extend
+         (make-instance 'step-definition :regex regex :continuation function)
+         *steps*)))
   *steps*)
 
-(defmacro Given (regex args &body body)
+(defmacro clucumber-steps:Given* (regex args &body body)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (add-step ,regex (lambda (,@args) ,@body))))
 
-(defmacro Then (regex args &body body)
+(defmacro clucumber-steps:Then* (regex args &body body)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
      (add-step ,regex (lambda (,@args) ,@body))))
 
-;;; TODO: Given, When, Then.
+(defmacro clucumber-steps:When* (regex args &body body)
+  `(eval-when (:compile-toplevel :load-toplevel :execute)
+     (add-step ,regex (lambda (,@args) ,@body))))
 
 ;;; Packages
 
-(defun clucumber-external:start (base-pathname host port)
-  (load-definitions base-pathname)
-  (let ((socket (usocket:socket-connect host port)))
-    (serve-cucumber-requests socket)))
+(defun clucumber-external:start (*base-pathname* host port)
+  (load-definitions *base-pathname*)
+  (let* ((server (usocket:socket-listen host port :reuse-address t))
+         (socket (usocket:socket-accept server :element-type 'character)))
+    (unwind-protect
+        (serve-cucumber-requests socket)
+      (usocket:socket-close server))))
 
 (defvar clucumber-steps:*test-package* (find-package :clucumber-user))
 
@@ -90,3 +89,84 @@
        (:use #:clucumber)
        ,@defpackage-arguments)
      (setf *test-package* (find-package ',name))))
+
+
+;;; Wire protocol
+
+(defvar *wire-protocol-methods* (make-hash-table :test #'equal))
+
+(defmacro define-wire-protocol-method (name args &body body)
+  (let ((params (gensym)))
+    `(setf (gethash ,name *wire-protocol-methods*)
+           (lambda (,params)
+             (declare (ignorable ,params))
+             (catch 'wire-protocol-method
+               (let (,@(mapcar (lambda (arg-spec)
+                                 (destructuring-bind (arg-name &optional
+                                                               (jso-name (string-downcase arg-name)))
+                                     (if (listp arg-spec) arg-spec (list arg-spec))
+                                   `(,arg-name (getjso ,jso-name ,params))))
+                         args))
+                 ,@body))))))
+
+(defun call-wire-protocol-method (wire-protocol-message)
+  (let ((method (gethash (first wire-protocol-message) *wire-protocol-methods*)))
+    (if method
+        (funcall method
+                 (second wire-protocol-message))
+        (list "fail"))))
+
+(defun clucumber-steps:fail (message &key format-args exception backtrace)
+  (throw 'wire-protocol-method
+    (list "fail"
+          (apply #'jso
+                 `("message" ,(apply #'format nil message format-args)
+                             ,@(when exception
+                                 `("exception" ,exception))
+                             ,@(when backtrace
+                                 `("exception" ,backtrace)))))))
+
+(defun clucumber-steps:pending (&optional message)
+  (throw 'wire-protocol-method
+    `("pending" ,@(when message
+                    (list message)))))
+
+(define-wire-protocol-method "begin_scenario" ()
+  ;; TODO: Before/After
+  (list "success"))
+
+(define-wire-protocol-method "end_scenario" ()
+  ;; TODO: Before/After
+  (list "success"))
+
+(define-wire-protocol-method "step_matches" ((name-to-match "name_to_match"))
+  (list "success"
+        (loop for posn from 0
+              for step across *steps*
+              for scanner = (scanner step)
+              for (matchp end starts ends) = (multiple-value-list (cl-ppcre:scan scanner name-to-match))
+              for arguments = (map 'list (lambda (start end)
+                                           (jso "val" (subseq name-to-match start end)
+                                                "pos" start))
+                                   starts ends)
+              if matchp collect (jso "id" posn "args" arguments
+                                     "regexp" (regex step)
+                                     "source" (enough-namestring (definition-file step)
+                                                     *base-pathname*))))))
+
+(define-wire-protocol-method "invoke" (id args)
+  (let ((*debugger-hook* (lambda (condition prev-hook)
+                           (declare (ignore prev-hook))
+                           (fail "Caught exception"
+                                 :exception (prin1-to-string condition)
+                                 :backtrace (trivial-backtrace:print-backtrace condition :output nil)))))
+    (let ((step (elt *steps* id)))
+      (if step
+          (progn (funcall (continuation step) args)
+                 (list "success"))
+          (fail "Step ~S is undefined" :format-args `(,id))))))
+
+(define-wire-protocol-method "snippet_text" ((keyword "step_keyword") (step-name "step_name"))
+  ;; TODO: figure out multiline_arg_class
+  (list "success"
+        (format nil "(~A* #?/^~A$/ ()~%  (pending))" keyword step-name)))
