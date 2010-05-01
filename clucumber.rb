@@ -1,6 +1,8 @@
 require 'pty'
 
 class ClucumberSubprocess
+  class LaunchFailed < RuntimeError; end
+  
   attr_reader :output
 
   def initialize(dir, options={})
@@ -27,6 +29,7 @@ class ClucumberSubprocess
       (clucumber-external:start #p"./" "localhost" #{@port})
     LISP
     until socket = TCPSocket.new("localhost", @port) rescue nil
+      raise LaunchFailed, "Couldn't start clucumber:\n#{@output}" unless alive?
       sleep 0.01
     end
     File.open(File.join(@dir, "step_definitions", "clucumber.wire"), "w") do |out|
@@ -59,6 +62,8 @@ class ClucumberSubprocess
   end
 
   def alive?
-    !@pid.nil?
+    if !@pid.nil?
+      (Process.kill("CONT", @pid) && true) rescue false
+    end
   end
 end
