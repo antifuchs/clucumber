@@ -4,20 +4,35 @@ Feature: Load order of files
   specific order, so that I can rely on definitions in one file to be
   present in the other.
 
-Scenario: Support files are loaded first
+Scenario: Support files are loaded before step definitions
+  
+  Given a standard Cucumber project directory structure
+  Given a stub lisp file named "features/support/a.lisp"
+  Given a stub lisp file named "features/step_definitions/a.lisp"
 
-  Given I start clucumber in fixtures/load-order/
-  When I load the clucumber-specific files
-  Then support/a.lisp should be loaded before step_definitions/a.lisp
+  When I start clucumber on port 42427
+  Then show me the clucumber output
+  Then files should be loaded in this order:
+  | support/a.lisp          |
+  | step_definitions/a.lisp |
+
 
 Scenario: Files are loaded in alphabetical order
 
-  Given I start clucumber in fixtures/load-order/
-  When I load the clucumber-specific files
+  Given a standard Cucumber project directory structure
+  Given a stub lisp file named "features/support/a.lisp"
+  Given a stub lisp file named "features/support/b.lisp"
+  Given a stub lisp file named "features/support/c.lisp"
+  Given a stub lisp file named "features/step_definitions/a.lisp"
+  Given a stub lisp file named "features/step_definitions/b.lisp"
+  Given a stub lisp file named "features/step_definitions/c.lisp"
 
-  Then support/a.lisp should be loaded before support/b.lisp
-  And support/b.lisp should be loaded before support/c.lisp
-
-  And step_definitions/a.lisp should be loaded before step_definitions/b.lisp
-  And step_definitions/b.lisp should be loaded before step_definitions/c.lisp
+  When I start clucumber on port 42427
+  Then files should be loaded in this order:
+  | support/a.lisp          |
+  | support/b.lisp          |
+  | support/c.lisp          |
+  | step_definitions/a.lisp |
+  | step_definitions/b.lisp |
+  | step_definitions/c.lisp |
 

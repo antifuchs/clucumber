@@ -73,12 +73,15 @@
 
 ;;; Packages
 
-(defun clucumber-external:start (*base-pathname* host port)
+(defun clucumber-external:start (*base-pathname* host port &key quit)
+  (setf (fill-pointer *steps*) 0)
   (load-definitions *base-pathname*)
-  (let* ((server (usocket:socket-listen host port :reuse-address t))
-         (socket (usocket:socket-accept server :element-type 'character)))
+  (let ((server (usocket:socket-listen host port :reuse-address t)))
     (unwind-protect
-        (serve-cucumber-requests socket)
+        (loop
+          (let ((socket (usocket:socket-accept server :element-type 'character)))
+            (serve-cucumber-requests socket))
+          (when quit (return)))
       (usocket:socket-close server))))
 
 (defvar clucumber-steps:*test-package* (find-package :clucumber-user))
@@ -124,7 +127,7 @@
                              ,@(when exception
                                  `("exception" ,exception))
                              ,@(when backtrace
-                                 `("exception" ,backtrace)))))))
+                                 `("backtrace" ,backtrace)))))))
 
 (defun clucumber-steps:pending (&optional message)
   (throw 'wire-protocol-method
@@ -152,7 +155,7 @@
               if matchp collect (jso "id" posn "args" arguments
                                      "regexp" (regex step)
                                      "source" (enough-namestring (definition-file step)
-                                                     *base-pathname*))))))
+                                                     *base-pathname*)))))
 
 (define-wire-protocol-method "invoke" (id args)
   (let ((*debugger-hook* (lambda (condition prev-hook)
@@ -162,7 +165,7 @@
                                  :backtrace (trivial-backtrace:print-backtrace condition :output nil)))))
     (let ((step (elt *steps* id)))
       (if step
-          (progn (funcall (continuation step) args)
+          (progn (apply (continuation step) args)
                  (list "success"))
           (fail "Step ~S is undefined" :format-args `(,id))))))
 
