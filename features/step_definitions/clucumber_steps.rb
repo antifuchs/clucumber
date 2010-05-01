@@ -7,7 +7,7 @@ end
 
 When /^I start clucumber on port (\d+)$/ do |port|
   @clucumber = ClucumberSubprocess.new(File.join(working_dir, 'features'), :port => port)
-  @clucumber.wait_until_started
+  @clucumber.start
 end
 
 Then /^show me the clucumber output$/ do
@@ -20,6 +20,5 @@ end
 
 Then /^files should be loaded in this order:$/ do |expected|
   actual = File.readlines(File.join(working_dir, "files")).map {|line| [line.strip] }
-  puts actual.inspect
   expected.diff!(actual)
 end

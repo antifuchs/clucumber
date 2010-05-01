@@ -4,20 +4,7 @@ Feature: Load order of files
   specific order, so that I can rely on definitions in one file to be
   present in the other.
 
-Scenario: Support files are loaded before step definitions
-  
-  Given a standard Cucumber project directory structure
-  Given a stub lisp file named "features/support/a.lisp"
-  Given a stub lisp file named "features/step_definitions/a.lisp"
-
-  When I start clucumber on port 42427
-  Then show me the clucumber output
-  Then files should be loaded in this order:
-  | support/a.lisp          |
-  | step_definitions/a.lisp |
-
-
-Scenario: Files are loaded in alphabetical order
+Scenario: Files are loaded in alphabetical order, support before steps
 
   Given a standard Cucumber project directory structure
   Given a stub lisp file named "features/support/a.lisp"
