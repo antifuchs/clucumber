@@ -3,7 +3,10 @@
 
 (cl:defpackage #:clucumber-steps
   (:export #:define-test-package #:*test-package*
-           #:Given* #:When* #:Then* #:pending #:fail)
+           #:Given* #:When* #:Then*
+           #:Before #:After
+           #:pending #:fail
+           #:var)
   (:use #:cl #:cl-interpol))
 
 (cl:defpackage #:clucumber-user

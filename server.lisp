@@ -91,6 +91,18 @@
        ,@defpackage-arguments)
      (setf *test-package* (find-package ',name))))
 
+;;; Before / after hooks:
+
+;; I'm not sure if these can handle tags. It would certainly be nice if they could.
+
+(defvar *before-hooks* (make-array 0 :adjustable t :fill-pointer t))
+(defvar *after-hooks* (make-array 0 :adjustable t :fill-pointer t))
+
+(defmacro clucumber-steps:Before (&body body)
+  `(vector-push-extend (lambda () ,@body) *before-hooks*))
+
+(defmacro clucumber-steps:After (&body body)
+  `(vector-push-extend (lambda () ,@body) *before-hooks*))
 
 ;;; Wire protocol
 
@@ -133,12 +145,14 @@
                     (list message)))))
 
 (define-wire-protocol-method "begin_scenario" ()
-  ;; TODO: Before/After
-  (list "success"))
+  (with-error-handling
+    (map nil 'funcall *before-hooks*)
+    (list "success")))
 
 (define-wire-protocol-method "end_scenario" ()
-  ;; TODO: Before/After
-  (list "success"))
+  (with-error-handling
+    (map nil 'funcall *after-hooks*)
+    (list "success")))
 
 (define-wire-protocol-method "step_matches" ((name-to-match "name_to_match"))
   (list "success"
