@@ -155,19 +155,44 @@
                                      "source" (enough-namestring (definition-file step)
                                                      *base-pathname*)))))
 
+(defmacro with-error-handling (&body body)
+  `(let ((*debugger-hook* (lambda (condition prev-hook)
+                            (declare (ignore prev-hook))
+                            (fail "Non-error condition invoked the debugger"
+                                  :exception (prin1-to-string condition)
+                                  :backtrace (trivial-backtrace:print-backtrace condition :output nil)))))
+     (handler-case
+               (progn ,@body)
+             (error (condition)
+               (fail "Caught an error"
+                     :exception (prin1-to-string condition)
+                     :backtrace (trivial-backtrace:print-backtrace condition :output nil))))))
+
 (define-wire-protocol-method "invoke" (id args)
-  (let ((*debugger-hook* (lambda (condition prev-hook)
-                           (declare (ignore prev-hook))
-                           (fail "Caught exception"
-                                 :exception (prin1-to-string condition)
-                                 :backtrace (trivial-backtrace:print-backtrace condition :output nil)))))
-    (let ((step (elt *steps* id)))
-      (if step
-          (progn (apply (continuation step) args)
-                 (list "success"))
-          (fail "Step ~S is undefined" :format-args `(,id))))))
+  (let ((step (elt *steps* id)))
+    (if step
+        (with-error-handling
+          (apply (continuation step) args)
+          (list "success"))
+        (fail "Step ~S is undefined" :format-args `(,id)))))
 
 (define-wire-protocol-method "snippet_text" ((keyword "step_keyword") (step-name "step_name"))
   ;; TODO: figure out multiline_arg_class
   (list "success"
         (format nil "(~A* #?/^~A$/ ()~%  (pending))" keyword step-name)))
+
+;;; Sharing state between steps:
+
+(defvar *variables* (make-hash-table :test #'eql))
+
+(defun clucumber-steps:var (name &optional default)
+  (gethash name *variables* default))
+
+(defun (setf clucumber-steps:var) (new-val name &optional default)
+  (setf (gethash name *variables* default) new-val))
+
+(defun reset-state ()
+  (clrhash *variables*))
+
+(Before
+ (reset-state))
