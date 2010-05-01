@@ -17,7 +17,7 @@
       (let ((*readtable* (copy-readtable))
             (*package* *test-package*))
         (cl-interpol:enable-interpol-syntax)
-        (mapc #'load (sort files #'string>
+        (mapc #'load (sort files #'string<
                            :key (lambda (path)
                                   (enough-namestring path base-pathname))))))))
 
