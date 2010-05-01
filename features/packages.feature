@@ -6,9 +6,13 @@ Feature: Packages
 
 Scenario: Defining a package in support
   
-  When I start clucumber in fixtures/packages/
-  Then the current package should be "default-package"
+  Given a standard Cucumber project directory structure
+  Given a file named "features/support/package.lisp" with:
+  """
+(define-test-package MY-TEST-PACKAGE (:use :cl))
+  """
+  Given a stub lisp file named "features/step_definitions/uses-package.lisp"
 
-  When I define some-other-package as the test package
-  Then the current package should be "some-other-package"
-
+  When I start clucumber on port 42427
+  Then the packages should be
+  | MY-TEST-PACKAGE |

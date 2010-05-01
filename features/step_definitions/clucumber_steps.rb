@@ -2,6 +2,8 @@ Given /^a stub lisp file named \"([^\"]*)\"$/ do |name|
   Given("a file named \"#{name}\" with:", <<-LISP)
 (with-open-file (f #p"../files" :direction :output :if-exists :append :if-does-not-exist :create)
   (format f "~A~%" (enough-namestring *load-truename*)))
+(with-open-file (f #p"../packages" :direction :output :if-exists :append :if-does-not-exist :create)
+  (format f "~A~%" (package-name *package*)))
 LISP
 end
 
@@ -20,5 +22,10 @@ end
 
 Then /^files should be loaded in this order:$/ do |expected|
   actual = File.readlines(File.join(working_dir, "files")).map {|line| [line.strip] }
+  expected.diff!(actual)
+end
+
+Then /^the packages should be$/ do |expected|
+  actual = File.readlines(File.join(working_dir, "packages")).map {|line| [line.strip] }
   expected.diff!(actual)
 end
