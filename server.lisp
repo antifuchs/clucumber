@@ -27,8 +27,6 @@
         (let* ((line (read-line stream))
                (message (read-json line nil))
                (reply (call-wire-protocol-method message)))
-          (format t "Got this: ~S~%" message)
-          (format t "Wire-protocol method returns ~S~%" reply)
           (st-json:write-json reply stream)
           (terpri stream)
           (finish-output stream)))
