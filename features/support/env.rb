@@ -60,7 +60,6 @@ begin
                                            :port => 42428)
   at_exit do
     @main_clucumber.kill
-    FileUtils.rm_f File.expand_path("../step_definitions/clucumber.wire", File.dirname(__FILE__))
   end
 
   @main_clucumber.start <<-LISP

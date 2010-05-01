@@ -48,6 +48,7 @@ class ClucumberSubprocess
 
   def kill
     if @pid
+      FileUtils.rm_f File.join(@dir, "step_definitions", "clucumber.wire")
       @reader.terminate!
       Process.kill("TERM", @pid)
       Process.waitpid(@pid)

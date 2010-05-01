@@ -24,22 +24,23 @@ definitions.
 Running tests
 -------------
 
-This is the hard part, and the part where clucumber needs more
-work. First, load your lisp, then load asdf, and clucumber (including
-all its dependencies, which you hopefully have installed; you can get
-them all from clbuild):
+In your `features/support/env.rb`, you load the clucumber.rb included in this distribution. Then, you run something like this:
 
-        (require :asdf)
-        (asdf:oos 'asdf:load-op :clucumber)
+	begin
+	  @main_clucumber = ClucumberSubprocess.new(File.expand_path("../", File.dirname(__FILE__)),
+	                                           :port => 42428)
+	  at_exit do
+	    @main_clucumber.kill
+	  end
 
-Then, you open a socket for cucumber to connect to (localhost:42424 in this case):
+	  @main_clucumber.start <<-LISP
+		;; Put code here that loads your application.
+	  LISP
+	rescue PTY::ChildExited
+	  puts(@main_clucumber && @main_clucumber.output)
+	end
 
-        (clucumber-external:start #p"/path/to/your/features/" "localhost" 42424)
-
-Then you create a features/step_definitions/lisp.wire file:
-
-        host: localhost
-        port: 42424
+This will launch a lisp with clucumber loaded (pass :lisp parameter to `ClucumberSubprocess.new` to specify which lisp, it defaults to sbcl), and start listening on port 42428.
 
 Then, on the command line, you run cucumber:
 
