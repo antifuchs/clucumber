@@ -144,6 +144,19 @@
     `("pending" ,@(when message
                     (list message)))))
 
+(defmacro with-error-handling (&body body)
+  `(let ((*debugger-hook* (lambda (condition prev-hook)
+                            (declare (ignore prev-hook))
+                            (fail "Non-error condition invoked the debugger"
+                                  :exception (prin1-to-string condition)
+                                  :backtrace (trivial-backtrace:print-backtrace condition :output nil)))))
+     (handler-case
+               (progn ,@body)
+             (error (condition)
+               (fail "Caught an error"
+                     :exception (prin1-to-string condition)
+                     :backtrace (trivial-backtrace:print-backtrace condition :output nil))))))
+
 (define-wire-protocol-method "begin_scenario" ()
   (with-error-handling
     (map nil 'funcall *before-hooks*)
@@ -152,6 +165,7 @@
 (define-wire-protocol-method "end_scenario" ()
   (with-error-handling
     (map nil 'funcall *after-hooks*)
+    (reset-state)
     (list "success")))
 
 (define-wire-protocol-method "step_matches" ((name-to-match "name_to_match"))
@@ -168,19 +182,6 @@
                                      "regexp" (regex step)
                                      "source" (enough-namestring (definition-file step)
                                                      *base-pathname*)))))
-
-(defmacro with-error-handling (&body body)
-  `(let ((*debugger-hook* (lambda (condition prev-hook)
-                            (declare (ignore prev-hook))
-                            (fail "Non-error condition invoked the debugger"
-                                  :exception (prin1-to-string condition)
-                                  :backtrace (trivial-backtrace:print-backtrace condition :output nil)))))
-     (handler-case
-               (progn ,@body)
-             (error (condition)
-               (fail "Caught an error"
-                     :exception (prin1-to-string condition)
-                     :backtrace (trivial-backtrace:print-backtrace condition :output nil))))))
 
 (define-wire-protocol-method "invoke" (id args)
   (let ((step (elt *steps* id)))
@@ -207,6 +208,3 @@
 
 (defun reset-state ()
   (clrhash *variables*))
-
-(Before
- (reset-state))
