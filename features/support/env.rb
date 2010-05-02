@@ -1,5 +1,6 @@
 require 'fileutils'
 require 'tempfile'
+require File.expand_path("../../clucumber.rb", File.dirname(__FILE__))
 
 class ClucumberWorld
   extend Forwardable
@@ -60,27 +61,4 @@ end
 Before do
   FileUtils.rm_rf ClucumberWorld.working_dir
   FileUtils.mkdir ClucumberWorld.working_dir
-end
-
-
-# Start the main clucumber:
-
-require File.expand_path("../../clucumber.rb", File.dirname(__FILE__))
-
-unless File.exist?(File.expand_path("../step_definitions/clucumber_override.wire", File.dirname(__FILE__)))
-  begin
-    @main_clucumber = ClucumberSubprocess.new(File.expand_path("../", File.dirname(__FILE__)),
-                                              :port => 42428)
-    at_exit do
-      @main_clucumber.kill
-    end
-    
-    @main_clucumber.start <<-LISP
-    ;; Load the current dir's system definition,
-    ;; not what might be linked somewhere in the system:
-    (load #p"#{File.expand_path("../../clucumber.asd", File.dirname(__FILE__))}")
-  LISP
-  rescue PTY::ChildExited
-    puts(@main_clucumber && @main_clucumber.output)
-  end
 end
