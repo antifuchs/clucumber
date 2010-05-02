@@ -77,29 +77,25 @@ Scenario: Pending simple scenario
 
   Scenario: Single scenario
   
-      Given this step fails
+      Given this step is pending
   """
-  Given a file named "features/step_definitions/pend.lisp" with:
+  Given a file named "features/step_definitions/pending_steps.lisp" with:
   """
-  (Given* #?"^this step is pending" () 
+  (Given* #?{^this step is pending$} () 
     (pending "optional message"))
   """
 
-  When I run cucumber -f progress features/pend.feature
+  When I run cucumber -s features/pend.feature
   Then it should pass with
   """
-  U
+  Feature: Test pendingness
   
-  1 scenario (1 undefined)
-  1 step (1 undefined)
+    Scenario: Single scenario
+      Given this step is pending
+        optional message (Cucumber::Pending)
+        features/pend.feature:5:in `Given this step is pending'
 
-  You can implement step definitions for undefined steps with these snippets:
-
-  Given /^this step fails$/ do
-    pending # express the regexp above with the code you wish you had
-  end
-  (Given* #?/^this step fails$/ ()
-    (pending))
-
-
+  1 scenario (1 pending)
+  1 step (1 pending)
+  
   """
