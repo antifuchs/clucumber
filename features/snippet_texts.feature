@@ -33,14 +33,14 @@ Scenario: Suggestions for undefined steps with and without arguments
     ;; express the regexp above with the code you wish you had
     (pending))
   
-  When /^I use a step with "([^\\"]*)"$/ do |arg1|
+  When /^I use a step with "([^\"]*)"$/ do |arg1|
     pending # express the regexp above with the code you wish you had
   end
   (When* #?{^I use a step with "([^"]*)"$} (group-0)
     ;; express the regexp above with the code you wish you had
     (pending))
   
-  Then /^the step "([^\\"]*)" should "([^\\"]*)"$/ do |arg1, arg2|
+  Then /^the step "([^\"]*)" should "([^\"]*)"$/ do |arg1, arg2|
     pending # express the regexp above with the code you wish you had
   end
   (Then* #?{^the step "([^"]*)" should "([^"]*)"$} (group-0 group-1)

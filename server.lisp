@@ -224,7 +224,7 @@
                                   collect (format nil "group-~D" i))))
             (format nil "(~A* #?~C^~A$~C (~{~A~^ ~})~%  ~
                            ;; express the regexp above with the code you wish you had~%  ~
-                           (pending))" keyword *default-step-regex-delimiter*
+                           (pending))" (string-trim '(#\Space) keyword) *default-step-regex-delimiter*
                            step-re *default-step-regex-close-delimiter*
                            group-vars)))))
 
