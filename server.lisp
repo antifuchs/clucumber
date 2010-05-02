@@ -1,8 +1,14 @@
 (cl:in-package #:clucumber)
 
+(defvar clucumber-steps:*test-package* (find-package :clucumber-user))
+
 (defvar *print-backtraces* t)
 
 (defvar *base-pathname*)
+
+(defparameter *default-step-regex-delimiter* #\{)
+
+(defparameter *default-step-regex-close-delimiter* #\})
 
 (defun load-definitions (base-pathname)
   (let ((support-files (directory (merge-pathnames (make-pathname :directory '(:relative "support"
@@ -17,7 +23,9 @@
                                                 base-pathname))))
     (dolist (files (list support-files step-files))
       (let ((*readtable* (copy-readtable))
-            (*package* *test-package*))
+            (*package* *test-package*)
+            (cl-interpol::*regex-delimiters* (cons *default-step-regex-delimiter*
+                                                   cl-interpol::*regex-delimiters*)))
         (cl-interpol:enable-interpol-syntax)
         (mapc #'load (sort files #'string<
                            :key (lambda (path)
@@ -83,8 +91,6 @@
             (serve-cucumber-requests socket))
           (when quit (return)))
       (usocket:socket-close server))))
-
-(defvar clucumber-steps:*test-package* (find-package :clucumber-user))
 
 (defmacro clucumber-steps:define-test-package (name &rest defpackage-arguments)
   `(eval-when (:compile-toplevel :load-toplevel :execute)
@@ -198,10 +204,30 @@
           (list "success"))
         (fail "Step ~S is undefined" :format-args `(,id)))))
 
+
+(defun make-dwim-step-regex (step)
+  (let* ((escaped (cl-ppcre:regex-replace-all "[][}{)(]" step "\\\\\\&"))
+         (count 0))
+    (values (or (cl-ppcre:regex-replace-all "\"[^\"]+\"" escaped
+                                            (lambda (&rest _)
+                                              (declare (ignore _))
+                                              (incf count)
+                                              "\"([^\"]*)\""))
+                escaped)
+            count)))
+
 (define-wire-protocol-method "snippet_text" ((keyword "step_keyword") (step-name "step_name"))
   ;; TODO: figure out multiline_arg_class
   (list "success"
-        (format nil "(~A* #?/^~A$/ ()~%  (pending))" keyword step-name)))
+        (multiple-value-bind (step-re group-count) (make-dwim-step-regex step-name)
+          (let ((group-vars (loop for i from 0 below group-count
+                                  collect (format nil "group-~D" i))))
+            (format t "oink: ~s => ~S, ~S~%" step-name step-re group-vars)
+            (format nil "(~A* #?~C^~A$~C (~{~A~^ ~})~%  ~
+                           ;; express the regexp above with the code you wish you had~%  ~
+                           (pending))" keyword *default-step-regex-delimiter*
+                           step-re *default-step-regex-close-delimiter*
+                           group-vars)))))
 
 ;;; Sharing state between steps:
 
