@@ -222,7 +222,6 @@
         (multiple-value-bind (step-re group-count) (make-dwim-step-regex step-name)
           (let ((group-vars (loop for i from 0 below group-count
                                   collect (format nil "group-~D" i))))
-            (format t "oink: ~s => ~S, ~S~%" step-name step-re group-vars)
             (format nil "(~A* #?~C^~A$~C (~{~A~^ ~})~%  ~
                            ;; express the regexp above with the code you wish you had~%  ~
                            (pending))" keyword *default-step-regex-delimiter*
