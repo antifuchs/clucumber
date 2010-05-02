@@ -1,4 +1,5 @@
 require 'pty'
+require 'fileutils'
 
 class ClucumberSubprocess
   class LaunchFailed < RuntimeError; end

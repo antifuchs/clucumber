@@ -29,3 +29,9 @@ Then /^the packages should be$/ do |expected|
   actual = File.readlines(File.join(working_dir, "packages")).map {|line| [line.strip] }
   expected.diff!(actual)
 end
+
+Given /^the standard clucumber setup$/ do
+  in_current_dir do
+    FileUtils.cp "../clucumber_setup/clucumber_setup.rb", "features/support/"
+  end
+end

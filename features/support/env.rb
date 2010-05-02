@@ -1,4 +1,5 @@
 require 'fileutils'
+require 'tempfile'
 
 class ClucumberWorld
   extend Forwardable
@@ -40,6 +41,16 @@ class ClucumberWorld
     end
     @last_stderr = IO.read(stderr_file.path)
   end
+
+  def strip_duration(s)
+    s.gsub(/^\d+m\d+\.\d+s\n/m, "")
+  end
+
+  attr_reader :last_exit_status, :last_stderr
+  
+  def last_stdout
+    strip_duration(@last_stdout)
+  end
 end
 
 World do
@@ -63,7 +74,7 @@ unless File.exist?(File.expand_path("../step_definitions/clucumber_override.wire
     at_exit do
       @main_clucumber.kill
     end
-
+    
     @main_clucumber.start <<-LISP
     ;; Load the current dir's system definition,
     ;; not what might be linked somewhere in the system:

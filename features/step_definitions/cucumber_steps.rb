@@ -36,7 +36,7 @@ Then /^it should (fail|pass)$/ do |success|
 end
 
 Then /^it should (fail|pass) with$/ do |success, output|
-  last_stdout.should == output
+  last_stdout.gsub(/\n[dhms0-9]+s\n$/, '').should == output
   Then("it should #{success}")
 end
 
@@ -55,3 +55,8 @@ end
 Then /^print output$/ do
   puts last_stdout
 end
+
+Then /^print stderr$/ do
+  puts last_stderr
+end
+

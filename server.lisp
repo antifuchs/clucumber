@@ -1,5 +1,7 @@
 (cl:in-package #:clucumber)
 
+(defvar *print-backtraces* t)
+
 (defvar *base-pathname*)
 
 (defun load-definitions (base-pathname)
@@ -144,18 +146,23 @@
     `("pending" ,@(when message
                     (list message)))))
 
+(defun backtrace-for (condition)
+  (if *print-backtraces*
+      (trivial-backtrace:print-backtrace condition :output nil)
+      ""))
+
 (defmacro with-error-handling (&body body)
   `(let ((*debugger-hook* (lambda (condition prev-hook)
                             (declare (ignore prev-hook))
                             (fail "Non-error condition invoked the debugger"
-                                  :exception (prin1-to-string condition)
-                                  :backtrace (trivial-backtrace:print-backtrace condition :output nil)))))
+                                  :exception (princ-to-string condition)
+                                  :backtrace (backtrace-for condition)))))
      (handler-case
                (progn ,@body)
              (error (condition)
                (fail "Caught an error"
-                     :exception (prin1-to-string condition)
-                     :backtrace (trivial-backtrace:print-backtrace condition :output nil))))))
+                     :exception (princ-to-string condition)
+                     :backtrace (backtrace-for condition))))))
 
 (define-wire-protocol-method "begin_scenario" ()
   (with-error-handling

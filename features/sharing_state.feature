@@ -1,3 +1,4 @@
+@lisp
 Feature: Sharing state between steps
 
   As a user of clucumber, 
