@@ -38,8 +38,8 @@ Scenario: State resetting between features
     Then clucumber variable "a" should be undefined
     Then clucumber variable "b" should be undefined    
   """
-  When I run cucumber -f progress
-  Then it should pass with
+  When I run "cucumber -f progress"
+  Then it should pass with exactly:
   """
   ......
   

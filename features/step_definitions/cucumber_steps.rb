@@ -1,62 +1,16 @@
 # Taken from cucumber's step definitions
 
-Given /^I am in (.*)$/ do |relative_path|
-  @current_dir = self_test_dir(relative_path)
-end
-
 Given /^a standard Cucumber project directory structure$/ do
-  @current_dir = working_dir
-  in_current_dir do
-    FileUtils.rm_rf 'features' if File.directory?('features')
-    FileUtils.mkdir_p 'features/support'
-    FileUtils.mkdir 'features/step_definitions'
-  end
+  create_dir 'features/support'
+  create_dir 'features/step_definitions'
 end
 
-Given /^a file named "([^\"]*)"$/ do |file_name|
-  create_file(file_name, '')
-end
-
-Given /^a file named "([^\"]*)" with:$/ do |file_name, file_content|
-  create_file(file_name, file_content)
-end
-
-When /^I run cucumber (.*)$/ do |cucumber_opts|
-  run "#{Cucumber::RUBY_BINARY} -r rubygems #{Cucumber::BINARY} --no-color #{cucumber_opts} CUCUMBER_OUTPUT_ENCODING=UTF-8"
-end
-
-Then /^it should (fail|pass)$/ do |success|
-  if success == 'fail'
-    last_exit_status.should_not == 0
+## This may be interesting for the aruba project (if we drop the :
+Then /^it should (pass|fail) with exactly:$/ do |pass_fail, exact_output|
+  strip_duration(combined_output).should == exact_output
+  if pass_fail == 'pass'
+    Then "the exit status should be 0" 
   else
-    if last_exit_status != 0
-      raise "Failed with exit status #{last_exit_status}\nSTDOUT:\n#{last_stdout}\nSTDERR:\n#{last_stderr}"
-    end
+    Then "the exit status should not be 0"
   end
 end
-
-Then /^it should (fail|pass) with$/ do |success, output|
-  last_stdout.gsub(/\n[dhms0-9]+s\n$/, '').should == output
-  Then("it should #{success}")
-end
-
-Then /^the output should contain$/ do |text|
-  last_stdout.should include(text)
-end
-
-Then /^the output should not contain$/ do |text|
-  last_stdout.should_not include(text)
-end
-
-Then /^the output should be$/ do |text|
-  last_stdout.should == text
-end
-
-Then /^print output$/ do
-  puts last_stdout
-end
-
-Then /^print stderr$/ do
-  puts last_stderr
-end
-

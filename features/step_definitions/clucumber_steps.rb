@@ -8,7 +8,7 @@ LISP
 end
 
 When /^I start clucumber on port (\d+)$/ do |port|
-  @clucumber = ClucumberSubprocess.new(File.join(working_dir, 'features'), :port => port)
+  @clucumber = ClucumberSubprocess.new(File.join(current_dir, 'features'), :port => port)
   @clucumber.start
 end
 
@@ -21,17 +21,17 @@ After do
 end
 
 Then /^files should be loaded in this order:$/ do |expected|
-  actual = File.readlines(File.join(working_dir, "files")).map {|line| [line.strip] }
+  actual = File.readlines(File.join(current_dir, "files")).map {|line| [line.strip] }
   expected.diff!(actual)
 end
 
 Then /^the packages should be$/ do |expected|
-  actual = File.readlines(File.join(working_dir, "packages")).map {|line| [line.strip] }
+  actual = File.readlines(File.join(current_dir, "packages")).map {|line| [line.strip] }
   expected.diff!(actual)
 end
 
 Given /^the standard clucumber setup$/ do
-  in_current_dir do
-    FileUtils.cp "../clucumber_setup/clucumber_setup.rb", "features/support/"
-  end
+  FileUtils.cp(File.expand_path(File.join("..", "..", "self_test", "clucumber_setup.rb"),
+                                File.dirname(__FILE__)),
+               File.join(current_dir, "features/support/"))
 end
