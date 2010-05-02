@@ -16,7 +16,7 @@ Scenario: Suggestions for undefined steps with and without arguments
     When I use a step with "one arg"
     Then the step "with two args" should "suggest two args"
   """
-  When I run cucumber -f progress features/undefined.feature
+  When I run cucumber -f progress
   Then it should pass with
   """
   UUU
