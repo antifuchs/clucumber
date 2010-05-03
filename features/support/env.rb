@@ -1,7 +1,7 @@
 require 'fileutils'
 require 'tempfile'
 require 'aruba'
-require File.expand_path("../../clucumber.rb", File.dirname(__FILE__))
+require File.expand_path("../../lib/clucumber.rb", File.dirname(__FILE__))
 
 class ClucumberWorld
   def strip_duration(s)

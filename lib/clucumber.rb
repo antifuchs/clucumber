@@ -20,6 +20,7 @@ class ClucumberSubprocess
     }
     @in.puts(<<-LISP)
       (require :asdf)
+      (load #p"#{File.expand_path("clucumber/clucumber.asd", File.dirname(__FILE__))}")
     LISP
   end
   

@@ -1,4 +1,4 @@
-require File.expand_path("../../../../clucumber.rb", File.dirname(__FILE__))
+require File.expand_path("../../../../lib/clucumber.rb", File.dirname(__FILE__))
 
 begin
   @main_clucumber = ClucumberSubprocess.new(File.expand_path("../", File.dirname(__FILE__)),
