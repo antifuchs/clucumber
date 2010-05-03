@@ -6,6 +6,15 @@ protocol](http://wiki.github.com/aslakhellesoy/cucumber/wire-protocol) in (as po
 write [cucumber](http://cukes.info/) features, and write lisp code to execute
 your steps.
 
+Using clucumber
+---------------
+
+First, install the clucumber gem via rubygems:
+
+	gem install clucumber
+
+On the lisp side, clucumber depends on cl-interpol, cl-ppcre, trivial-backtrace, usocket and st-json. All of these are available in clbuild, and I recommend you use this to manage your lisp libraries.
+
 Getting started
 ---------------
 
@@ -21,11 +30,9 @@ Files in support and step_definitions/ are loaded (not file-compiled)
 in alphabetical order, with support/ files being loaded before step
 definitions.
 
-Running tests
--------------
+In your `features/support/env.rb`, you use something like this:
 
-In your `features/support/env.rb`, you load the clucumber.rb included in this distribution. Then, you run something like this:
-
+	require 'clucumber'
 	begin
 	  @main_clucumber = ClucumberSubprocess.new(File.expand_path("../", File.dirname(__FILE__)),
 	                                           :port => 42428)
@@ -46,9 +53,6 @@ Then, on the command line, you run cucumber:
 
         $ cucumber
 
-And you watch the lines zip by.
+And you watch the green or yellow lines zip by.
 
-That should be all (-:
-
-Over the next few days, I hope to fill out the test suite with more
-interesting examples that you can use as a reference.
+To see an example of a test suite that uses clucumber, see  [the features directory in  cl-beanstalk](http://github.com/antifuchs/cl-beanstalk/tree/master/features/). It comes with steps defined in ruby and Common Lisp.
