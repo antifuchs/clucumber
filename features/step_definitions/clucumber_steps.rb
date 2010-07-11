@@ -8,8 +8,8 @@ LISP
 end
 
 When /^I start clucumber on port (\d+)$/ do |port|
-  @clucumber = ClucumberSubprocess.new(File.join(current_dir, 'features'), :port => port)
-  @clucumber.start
+  @clucumber = ClucumberSubprocess.launch(File.join(current_dir, 'features'), :port => port)
+  @clucumber.listen
 end
 
 Then /^show me the clucumber output$/ do

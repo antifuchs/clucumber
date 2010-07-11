@@ -6,25 +6,39 @@ class ClucumberSubprocess
   
   attr_reader :output
 
+  def self.launch(dir, options={})
+    proc = ClucumberSubprocess.new(dir, options)
+    at_exit do
+      proc.kill
+    end
+    proc.run
+    proc
+  end
+  
   def initialize(dir, options={})
     @dir = dir
-    lisp = options[:lisp] || ENV['LISP'] || 'sbcl --disable-debugger'
+    @lisp = options[:lisp] || ENV['LISP'] || 'sbcl --disable-debugger'
     @port = options[:port] || raise("Need a port to run clucumber on.")
     @output = ""
-    
+  end
+
+  def run
     Dir.chdir(@dir) do
-      @out, @in, @pid = PTY.spawn(lisp)
+      @out, @in, @pid = PTY.spawn(@lisp)
     end
     @reader = Thread.start {
       record_output
-    }
+    } 
+    cluke_dir = File.expand_path("clucumber/", File.dirname(__FILE__))
+    Dir[cluke_dir + '/**/*.fasl'].each do |fasl|
+      FileUtils.rm(fasl)
+    end
     @in.puts(<<-LISP)
-      (require :asdf)
-      (load #p"#{File.expand_path("clucumber/clucumber.asd", File.dirname(__FILE__))}")
+      (load #p"#{File.expand_path("clucumber/clucumber-bootstrap.lisp", File.dirname(__FILE__))}")
     LISP
   end
   
-  def start(additional_forms="")
+  def listen(additional_forms="")
     @in.puts <<-LISP
       #{additional_forms}
       (asdf:oos 'asdf:load-op :clucumber)
@@ -67,5 +81,13 @@ class ClucumberSubprocess
     if !@pid.nil?
       (Process.kill("CONT", @pid) && true) rescue false
     end
+  end
+
+  def vendor_path
+    File.expand_path("../clucumber/vendor/", __FILE__)
+  end
+
+  def vendor_libs
+    Dir[vendor_path + '/*'].map {|dir| File.basename(dir)}
   end
 end

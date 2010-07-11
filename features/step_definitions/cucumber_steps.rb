@@ -7,7 +7,7 @@ end
 
 ## This may be interesting for the aruba project (if we drop the :
 Then /^it should (pass|fail) with exactly:$/ do |pass_fail, exact_output|
-  strip_duration(combined_output).should == exact_output
+  strip_duration(combined_output.downcase).should == exact_output.downcase
   if pass_fail == 'pass'
     Then "the exit status should be 0" 
   else

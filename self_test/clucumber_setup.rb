@@ -1,13 +1,8 @@
 require File.expand_path("../../../../lib/clucumber.rb", File.dirname(__FILE__))
 
 begin
-  @main_clucumber = ClucumberSubprocess.new(File.expand_path("../", File.dirname(__FILE__)),
-                                            :port => 42427)
-  at_exit do
-    @main_clucumber.kill
-  end
-
-  @main_clucumber.start <<-LISP
+  ClucumberSubprocess.launch(File.expand_path("../", File.dirname(__FILE__)),
+                             :port => 42427).listen <<-LISP
   (asdf:oos 'asdf:load-op :clucumber)
   (setf clucumber::*print-backtraces* nil)
   LISP

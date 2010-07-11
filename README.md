@@ -34,14 +34,9 @@ In your `features/support/env.rb`, you use something like this:
 
 	require 'clucumber'
 	begin
-	  @main_clucumber = ClucumberSubprocess.new(File.expand_path("../", File.dirname(__FILE__)),
-	                                           :port => 42428)
-	  at_exit do
-	    @main_clucumber.kill
-	  end
-
-	  @main_clucumber.start <<-LISP
-		;; Put code here that loads your application.
+	  ClucumberSubprocess.new(File.expand_path("../", File.dirname(__FILE__)),
+	                          :port => 42428).listen <<-LISP
+            ;; Put code here that loads your application.
 	  LISP
 	rescue PTY::ChildExited
 	  puts(@main_clucumber && @main_clucumber.output)
