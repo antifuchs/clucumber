@@ -6,7 +6,8 @@
            #:Given* #:When* #:Then*
            #:Before #:After
            #:pending #:fail
-           #:var)
+           #:var
+           #:table-equal)
   (:use #:cl #:cl-interpol))
 
 (cl:defpackage #:clucumber-user

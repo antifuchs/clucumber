@@ -31,15 +31,17 @@
                            :key (lambda (path)
                                   (enough-namestring path base-pathname))))))))
 
-(defun serve-cucumber-requests (socket &aux (stream (socket-stream socket)))
+(defvar *stream*)
+
+(defun serve-cucumber-requests (socket &aux (*stream* (socket-stream socket)))
   (handler-case
       (loop
-        (let* ((line (read-line stream))
+        (let* ((line (read-line *stream*))
                (message (read-json line nil))
                (reply (call-wire-protocol-method message)))
-          (st-json:write-json reply stream)
-          (terpri stream)
-          (finish-output stream)))
+          (st-json:write-json reply *stream*)
+          (terpri *stream*)
+          (finish-output *stream*)))
     (end-of-file nil nil)))
 
 
@@ -240,3 +242,12 @@
 
 (defun reset-state ()
   (clrhash *variables*))
+
+;;; Table diffing:
+
+(defun clucumber-steps:table-equal (expected actual)
+  (st-json:write-json (list "diff" (list expected actual)) *stream*)
+  (terpri *stream*)
+  (finish-output *stream*)
+  (let ((reply-line (read-line *stream*)))
+    (string= "diff_ok" (first (read-json reply-line nil)))))
