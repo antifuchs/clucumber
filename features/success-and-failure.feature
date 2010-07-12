@@ -46,7 +46,7 @@ Scenario: Failing simple scenario
   Given a file named "features/step_definitions/fail.lisp" with:
   """
   (Given* #?"^this step fails" () 
-     (assert (= 1 0)))
+     (fail "Fail!"))
   """
 
   When I run "cucumber -f progress"
@@ -56,7 +56,7 @@ Scenario: Failing simple scenario
   
   (::) failed steps (::)
   
-  Caught an error (The assertion (= 1 0) failed. from localhost:42427)
+  Fail! (Cucumber::WireSupport::WireException)
   features/fail.feature:5:in `Given this step fails'
   
   Failing Scenarios:
