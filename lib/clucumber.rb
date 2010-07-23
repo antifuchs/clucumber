@@ -23,6 +23,8 @@ class ClucumberSubprocess
   end
 
   def run
+    set_port_from_wire_file and return if wire_file_exists?
+    
     Dir.chdir(@dir) do
       @out, @in, @pid = PTY.spawn(@lisp)
     end
@@ -37,21 +39,29 @@ class ClucumberSubprocess
       (load #p"#{File.expand_path("clucumber/clucumber-bootstrap.lisp", File.dirname(__FILE__))}")
     LISP
   end
-  
-  def listen(additional_forms="")
+
+  def start_clucumber_server(additional_forms)
     @in.puts <<-LISP
       #{additional_forms}
       (asdf:oos 'asdf:load-op :clucumber)
       (clucumber-external:start #p"./" "localhost" #{@port})
     LISP
+  end
+  
+  def listen(additional_forms="")
+    start_clucumber_server(additional_forms) unless wire_file_exists?
+
     until socket = TCPSocket.new("localhost", @port) rescue nil
       raise LaunchFailed, "Couldn't start clucumber:\n#{@output}" unless alive?
       sleep 0.01
     end
-    File.open(File.join(@dir, "step_definitions", "clucumber.wire"), "w") do |out|
-      YAML.dump({'host' => "localhost", 'port' => @port}, out)
-    end
     socket.close
+
+    unless wire_file_exists?
+      File.open(wire_file, "w") do |out|
+        YAML.dump({'host' => "localhost", 'port' => @port}, out)
+      end
+    end
   end
 
   def record_output
@@ -67,7 +77,7 @@ class ClucumberSubprocess
 
   def kill
     if @pid
-      FileUtils.rm_f File.join(@dir, "step_definitions", "clucumber.wire")
+      FileUtils.rm_f wire_file
       @reader.terminate!
       Process.kill("TERM", @pid)
       Process.waitpid(@pid)
@@ -83,11 +93,24 @@ class ClucumberSubprocess
     end
   end
 
+  protected
   def vendor_path
     File.expand_path("../clucumber/vendor/", __FILE__)
   end
 
   def vendor_libs
     Dir[vendor_path + '/*'].map {|dir| File.basename(dir)}
+  end
+
+  def wire_file
+    File.join(@dir, "step_definitions", "clucumber.wire")    
+  end
+
+  def wire_file_exists?
+    File.exist?(wire_file)
+  end
+  
+  def set_port_from_wire_file
+    @port = YAML.parse_file(wire_file)['port']
   end
 end
