@@ -34,12 +34,12 @@ In your `features/support/env.rb`, you use something like this:
 
 	require 'clucumber'
 	begin
-	  ClucumberSubprocess.new(File.expand_path("../", File.dirname(__FILE__)),
-	                          :port => 42428).listen <<-LISP
+	  ClucumberSubprocess.launch(File.expand_path("../", File.dirname(__FILE__)),
+	                             :port => 42428).listen <<-LISP
             ;; Put code here that loads your application.
 	  LISP
 	rescue PTY::ChildExited
-	  puts(@main_clucumber && @main_clucumber.output)
+	  STDERR.puts(@main_clucumber && @main_clucumber.output)
 	end
 
 This will launch a lisp with clucumber loaded (pass :lisp parameter to `ClucumberSubprocess.new` to specify which lisp, it defaults to sbcl), and start listening on port 42428.
