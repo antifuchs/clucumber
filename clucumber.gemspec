@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{clucumber}
-  s.version = "0.3.0"
+  s.version = "0.3.2"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andreas Fuchs"]
-  s.date = %q{2010-07-13}
+  s.date = %q{2010-08-01}
   s.description = %q{A cucumber extension that lets you write your step definitions in Common Lisp. 
       Set internal state in your Hunchentoot web app or your library, and use the full power of Cucumber and its other extensions.}
   s.email = %q{asf@boinkor.net}
