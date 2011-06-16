@@ -30,7 +30,7 @@ Files in support and step_definitions/ are loaded (not file-compiled)
 in alphabetical order, with support/ files being loaded before step
 definitions.
 
-Put a .wire file into your step_definitions dir; I like to name it `features/step_definitions/clucumber.wire`. See [examples/clucumber.wire](examples/clucumber.wire) for one that works for me.
+Put a .wire file into your step_definitions dir; I like to name it `features/step_definitions/clucumber.wire`. See [examples/clucumber.wire](//github.com/antifuchs/clucumber/tree/master/examples/clucumber.wire) for one that works for me.
 
 In your `features/support/env.rb`, you use something like this:
 
@@ -43,7 +43,7 @@ In your `features/support/env.rb`, you use something like this:
 	  STDERR.puts(@main_clucumber && @main_clucumber.output)
 	end
 
-This will launch a lisp with clucumber loaded (pass :lisp parameter to `ClucumberSubprocess.new` to specify which lisp, it defaults to sbcl), and (if you used the [examples/clucumber.wire](examples/clucumber.wire) file) start listening on port 42428.
+This will launch a lisp with clucumber loaded (pass :lisp parameter to `ClucumberSubprocess.new` to specify which lisp, it defaults to sbcl), and (if you used the [examples/clucumber.wire](//github.com/antifuchs/clucumber/tree/master/examples/clucumber.wire) file) start listening on port 42428.
 
 Then, on the command line, you run cucumber:
 
