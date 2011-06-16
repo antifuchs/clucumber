@@ -14,7 +14,7 @@ begin
     gem.homepage = "http://github.com/antifuchs/clucumber"
     gem.authors = ["Andreas Fuchs"]
     gem.add_development_dependency "aruba", ">= 0"
-    gem.add_development_dependency "cucumber", ">= 0"
+    gem.add_dependency "cucumber", "~> 0.10.0"
     
     gem.files = "lib/**/*.rb", "lib/**/*.lisp", "lib/**/*.asd"
   end
