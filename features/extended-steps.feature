@@ -26,13 +26,14 @@ bar baz")))
   """
 
 
-  When I run "cucumber -f progress"
+  When I run `cucumber -q -f progress`
   Then it should pass with exactly:
   """
   .
 
   1 scenario (1 passed)
   1 step (1 passed)
+
 
   """
 
@@ -57,13 +58,14 @@ Scenario: Simple Tables
   """
 
 
-  When I run "cucumber -f progress"
+  When I run `cucumber -f progress`
   Then it should pass with exactly:
   """
   .
 
   1 scenario (1 passed)
   1 step (1 passed)
+
 
   """
 
@@ -92,12 +94,13 @@ Scenario: Tables with an additional argument
   """
 
 
-  When I run "cucumber -f progress"
+  When I run `cucumber -f progress`
   Then it should pass with exactly:
   """
   ..
 
   1 scenario (1 passed)
   2 steps (2 passed)
+
 
   """

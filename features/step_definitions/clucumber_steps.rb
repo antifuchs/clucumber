@@ -34,4 +34,7 @@ Given /^the standard clucumber setup$/ do
   FileUtils.cp(File.expand_path(File.join("..", "..", "self_test", "clucumber_setup.rb"),
                                 File.dirname(__FILE__)),
                File.join(current_dir, "features/support/"))
+  FileUtils.cp(File.expand_path(File.join("..", "..", "examples", "clucumber.wire"),
+                                File.dirname(__FILE__)),
+               File.join(current_dir, "features/step_definitions/"))
 end

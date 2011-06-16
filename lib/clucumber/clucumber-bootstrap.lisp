@@ -29,4 +29,4 @@
                                                      :type "asd")
                            vendor-dir)))
 
-(load (merge-pathnames #p"clucumber.asd" *load-truename*))
+(push (make-pathname :name nil :type nil :version nil :defaults *load-truename*) asdf:*central-registry*)

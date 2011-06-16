@@ -1,4 +1,5 @@
 require 'pty'
+require 'erb'
 require 'fileutils'
 
 class ClucumberSubprocess
@@ -18,19 +19,19 @@ class ClucumberSubprocess
   def initialize(dir, options={})
     @dir = dir
     @lisp = options[:lisp] || ENV['LISP'] || 'sbcl --disable-debugger'
-    @port = options[:port] || raise("Need a port to run clucumber on.")
+    @port = options[:port]
     @output = ""
   end
 
   def run
-    set_port_from_wire_file and return if wire_file_exists?
+    set_port
     
     Dir.chdir(@dir) do
       @out, @in, @pid = PTY.spawn(@lisp)
     end
     @reader = Thread.start {
       record_output
-    } 
+    }
     cluke_dir = File.expand_path("clucumber/", File.dirname(__FILE__))
     Dir[cluke_dir + '/**/*.fasl'].each do |fasl|
       FileUtils.rm(fasl)
@@ -46,21 +47,24 @@ class ClucumberSubprocess
       (asdf:oos 'asdf:load-op :clucumber)
       (clucumber-external:start #p"./" "localhost" #{@port})
     LISP
+    sleep 1
   end
   
   def listen(additional_forms="")
-    start_clucumber_server(additional_forms) unless wire_file_exists?
-
-    until socket = TCPSocket.new("localhost", @port) rescue nil
+    start_clucumber_server(additional_forms) unless connectable?
+    until connectable?
       raise LaunchFailed, "Couldn't start clucumber:\n#{@output}" unless alive?
-      sleep 0.01
+      sleep 0.5
     end
-    socket.close
+    sleep 1
+  end
 
-    unless wire_file_exists?
-      File.open(wire_file, "w") do |out|
-        YAML.dump({'host' => "localhost", 'port' => @port}, out)
-      end
+  def connectable?
+    if socket = TCPSocket.new("127.0.0.1", @port) rescue nil
+      socket.close
+      true
+    else
+      false
     end
   end
 
@@ -77,7 +81,6 @@ class ClucumberSubprocess
 
   def kill
     if @pid
-      FileUtils.rm_f wire_file
       @reader.terminate!
       Process.kill("TERM", @pid)
       Process.waitpid(@pid)
@@ -110,7 +113,12 @@ class ClucumberSubprocess
     File.exist?(wire_file)
   end
   
-  def set_port_from_wire_file
-    @port = YAML.parse_file(wire_file)['port']
+  def set_port
+    unless @port
+      @port = YAML.load(ERB.new(File.read(wire_file)).result)['port'] ||
+        ENV['CLUCUMBER_PORT'] || 
+        raise("Need a port to run clucumber on.")
+      @port = @port.to_i
+    end
   end
 end

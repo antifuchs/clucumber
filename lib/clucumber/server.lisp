@@ -34,15 +34,27 @@
 (defvar *stream*)
 
 (defun serve-cucumber-requests (socket &aux (*stream* (socket-stream socket)))
-  (handler-case
-      (loop
-        (let* ((line (read-line *stream*))
-               (message (read-json line nil))
-               (reply (call-wire-protocol-method message)))
-          (st-json:write-json reply *stream*)
-          (terpri *stream*)
-          (finish-output *stream*)))
-    (end-of-file nil nil)))
+  (handler-case 
+   (loop
+     (let* ((line (handler-case (read-line *stream*)
+                    (error ()
+                      (close *stream*)
+                      (return :socket-error))))
+            (message (read-json line nil))
+            (reply (call-wire-protocol-method message)))
+       (format *trace-output* "Read json message ~s -> ~s~%" line message)
+       (handler-case (progn (st-json:write-json reply *stream*)
+                            (terpri *stream*)
+                            (finish-output *stream*))
+         (error ()
+           (close *stream*)
+           (return :socket-error)))))
+    (error ()
+      (close *stream*)
+      (format t "OHAI ich bin ein scheissprogramm~%")
+      (force-output *standard-output*)
+      (sleep 10)
+      (return-from serve-cucumber-requests :socket-error))))
 
 
 ;;; Step definitions
@@ -89,8 +101,9 @@
   (let ((server (usocket:socket-listen host port :reuse-address t)))
     (unwind-protect
         (loop
+(with-open-file (*trace-output* #p"/tmp/trace.out" :direction :output :if-exists :append :if-does-not-exist :create)
           (let ((socket (usocket:socket-accept server :element-type 'character)))
-            (serve-cucumber-requests socket))
+             (serve-cucumber-requests socket)))
           (when quit (return)))
       (usocket:socket-close server))))
 

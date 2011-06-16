@@ -21,13 +21,14 @@ Scenario: Succeeding simple scenario
   (Given* #?"^this step succeeds$" () t)
   """
 
-  When I run "cucumber -f progress"
+  When I run `cucumber -f progress`
   Then it should pass with exactly:
   """
   .
 
   1 scenario (1 passed)
   1 step (1 passed)
+
 
   """
 
@@ -49,7 +50,7 @@ Scenario: Failing simple scenario
      (fail "Fail!"))
   """
 
-  When I run "cucumber -f progress"
+  When I run `cucumber -f progress`
   Then it should fail with exactly:
   """
   F
@@ -64,6 +65,7 @@ Scenario: Failing simple scenario
   
   1 scenario (1 failed)
   1 step (1 failed)
+
 
   """
 
@@ -85,7 +87,7 @@ Scenario: Pending simple scenario
     (pending "optional message"))
   """
 
-  When I run "cucumber -s"
+  When I run `cucumber -s`
   Then it should pass with exactly:
   """
   Feature: Test pendingness
@@ -98,4 +100,5 @@ Scenario: Pending simple scenario
   1 scenario (1 pending)
   1 step (1 pending)
   
+
   """

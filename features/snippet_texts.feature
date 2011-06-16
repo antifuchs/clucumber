@@ -16,7 +16,7 @@ Scenario: Suggestions for undefined steps with and without arguments
     When I use a step with "one arg"
     Then the step "with two args" should "suggest two args"
   """
-  When I run "cucumber -f progress"
+  When I run `cucumber -f progress`
   Then it should pass with exactly:
   """
   UUU
@@ -24,6 +24,7 @@ Scenario: Suggestions for undefined steps with and without arguments
   1 scenario (1 undefined)
   3 steps (3 undefined)
   
+
   You can implement step definitions for undefined steps with these snippets:
   
   Given /^this step is undefined$/ do

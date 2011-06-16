@@ -30,7 +30,7 @@ Scenario: Simple table diff - table given, compared.
     (unless (table-equal '(("foo") ("bar") ("baz")) table)
       (fail "Tables are not equal!")))
   """
-  When I run "cucumber -f progress"
+  When I run `cucumber -f progress`
   Then it should fail with exactly:
   """
   .F
@@ -46,4 +46,5 @@ Scenario: Simple table diff - table given, compared.
   2 scenarios (1 failed, 1 passed)
   2 steps (1 failed, 1 passed)
   
+
   """
