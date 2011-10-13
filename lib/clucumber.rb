@@ -81,7 +81,7 @@ class ClucumberSubprocess
 
   def kill
     if @pid
-      @reader.terminate!
+      @reader.terminate
       Process.kill("TERM", @pid)
       Process.waitpid(@pid)
       @pid = nil
