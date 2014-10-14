@@ -4,15 +4,14 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{clucumber}
-  s.version = "0.4.2"
+  s.name = "clucumber"
+  s.version = "0.4.1"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Andreas Fuchs"]
-  s.date = %q{2011-06-15}
-  s.description = %q{A cucumber extension that lets you write your step definitions in Common Lisp. 
-      Set internal state in your Hunchentoot web app or your library, and use the full power of Cucumber and its other extensions.}
-  s.email = %q{asf@boinkor.net}
+  s.date = "2014-10-14"
+  s.description = "A cucumber extension that lets you write your step definitions in Common Lisp. \n      Set internal state in your Hunchentoot web app or your library, and use the full power of Cucumber and its other extensions."
+  s.email = "asf@boinkor.net"
   s.extra_rdoc_files = [
     "LICENSE",
     "README.md"
@@ -158,13 +157,12 @@ Gem::Specification.new do |s|
     "lib/clucumber/vendor/usocket/vendor/kqueue.lisp",
     "lib/clucumber/vendor/usocket/vendor/split-sequence.lisp"
   ]
-  s.homepage = %q{http://github.com/antifuchs/clucumber}
+  s.homepage = "http://github.com/antifuchs/clucumber"
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.7}
-  s.summary = %q{Test drive your Common Lisp application from Cucumber}
+  s.rubygems_version = "1.8.23.2"
+  s.summary = "Test drive your Common Lisp application from Cucumber"
 
   if s.respond_to? :specification_version then
-    current_version = Gem::Specification::CURRENT_SPECIFICATION_VERSION
     s.specification_version = 3
 
     if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
